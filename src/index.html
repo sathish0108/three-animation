@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>three.js webgl - GLTFloader</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+        #zoomButton {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
+        #changeWallpaperButton {
+            position: absolute;
+            top: 80px;
+            /* left: 80px; */
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
+      
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: #a2a1de;
+            color: #fff;
+            text-align: center;
+            padding: 10px 0;
+        }
+        .icon {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            background-color: #555;
+            margin: 0 10px;
+            cursor: pointer;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -200px; /* initially hidden */
+            width: 150px;
+            height: 20%;
+            background-color: #a2a1de;
+            color: #fff;
+            transition: left 0.3s ease;
+            padding: 20px;
+        }
+        .close-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+        }
+    </style>
+
+    <link type="text/css" rel="stylesheet" href="main.css">
+</head>
+
+<body>
+
+<script type="importmap">
+    {
+        "imports": {
+            "three": "../build/three.module.js",
+            "three/addons/": "./jsm/"
+        }
+    }
+</script>
+<script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from '../loader/OrbitControls.js';
+    import { GLTFLoader } from '../loader/GLTFLoader.js';
+    import { gsap } from 'https://cdn.skypack.dev/gsap@3';
+
+    let camera, scene, renderer, controls, model,targetObject;
+    let wallpapers = ['wallpaper1.jpg', 'wallpaper2.jpg', 'wallpaper3.jpg', 'wallpaper4.jpg', 'wallpaper5.jpg'];
+    let currentWallpaperIndex = 0;
+
+    init();
+
+    function init() {
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        camera.position.set(0, 1, -2);
+
+        scene = new THREE.Scene();
+
+
+    
+
+        const loader = new GLTFLoader().setPath('model/');
+        loader.load('Bed Room.glb', async function(gltf) {
+            const model = gltf.scene;
+
+            // // Load the default wallpaper texture
+            const defaultTexture = new THREE.TextureLoader().load(wallpapers[currentWallpaperIndex]);
+
+            // // Create material with default texture
+            const defaultMaterial = new THREE.MeshBasicMaterial({ map: defaultTexture });
+
+            // Traverse through the model to find walls and assign default material
+            model.traverse(function(child) {
+                if (child instanceof THREE.Mesh && child.name.includes('Bedrest_Bed_sheet_0')) {
+                    child.material = defaultMaterial;
+                }
+            });
+
+            await renderer.compileAsync(model, camera, scene);
+            scene.add(model);
+            render();
+        });
+   
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1;
+        container.appendChild(renderer.domElement);
+
+        // Add OrbitControls for mouse control
+        controls = new OrbitControls(camera, renderer.domElement);
+      
+      
+
+
+        const geometry = new THREE.BoxGeometry();
+        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        targetObject = new THREE.Mesh(geometry, material);
+        targetObject.scale.set(0.1,0.1,0.1);
+        targetObject.position.set(0.5,0.8,0);
+       
+        scene.add(targetObject);
+        targetObject.visible = false;
+
+        window.addEventListener('resize', onWindowResize);
+        document.getElementById('zoomButton').addEventListener('click', zoomToTarget);
+        document.getElementById('changeWallpaperButton').addEventListener('click', changeWallpaper);
+
+    }
+    function zoomToTarget() {
+        const targetPosition = targetObject.position.clone();
+
+        // Calculate new camera position and rotation
+        const newPosition = targetPosition.clone().add(new THREE.Vector3(-1, 0, 0)); // Adjust the distance
+
+        // Animate camera position and rotation
+        gsap.to(camera.position, { x: newPosition.x, y: newPosition.y, z: newPosition.z, duration: 3 });
+    }
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        render();
+    }
+
+
+    function changeWallpaper() {
+        currentWallpaperIndex = (currentWallpaperIndex + 1) % wallpapers.length; // Increment index and wrap around
+        const newTextureLoader = new THREE.TextureLoader();
+    newTextureLoader.load(wallpapers[currentWallpaperIndex], function(newTexture) {
+        scene.traverse(function(child) {
+            if (child instanceof THREE.Mesh && child.name.includes('Bedrest_Bed_sheet_0')) {
+                child.material.map = newTexture;
+                child.material.needsUpdate = true; // Update material
+            }
+        });
+      
+
+console.log("wallpaer ",currentWallpaperIndex);
+        render();
+    });
+    }
+    function render() {
+        requestAnimationFrame(render);
+        controls.update();
+        renderer.render(scene, camera);
+    }
+
+</script>
+
+
+
+
+<div class="sidebar" id="sidebar">
+    <button id="changeWallpaperButton">Change Wallpaper</button>
+    <!-- <button id="changeWallpaperButton">Change Wallpaper</button> -->
+    
+    <button id="zoomButton">camera animation</button>
+    <span class="close-icon" onclick="toggleSidebar()">Close</span>
+</div>
+
+<div class="footer">
+    <div class="icon" onclick="toggleSidebar()">Icon 1</div>
+    <div class="icon" onclick="toggleSidebar()">Icon 2</div>
+    <div class="icon" onclick="toggleSidebar()">Icon 3</div>
+    <div class="icon" onclick="toggleSidebar()">Icon 4</div>
+</div>
+
+<script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar.style.left === '0px') {
+            sidebar.style.left = '-200px'; // hide sidebar
+        } else {
+            sidebar.style.left = '0px'; // show sidebar
+        }
+    }
+</script>
+</body>
+</html>
