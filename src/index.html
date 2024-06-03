@@ -19,16 +19,20 @@
         }
     }
 </script>
+<script src=""></script>
+
 <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from '../loader/OrbitControls.js';
     import { GLTFLoader } from '../loader/GLTFLoader.js';
+    import { RGBELoader } from '../loader/RGBELoader.js';
     import { gsap } from 'https://cdn.skypack.dev/gsap@3';
 
     let camera, scene, renderer, controls, model, targetObject,targetObject1,targetObject4;
     let wallpapers = ['./texture/bedsheet1.jpg', './texture/bedsheet2.jpeg', './texture/bedsheet3.jpg', './texture/bedsheet4.jpg', './texture/bedsheet5.jpg'];
     let currentWallpaperIndex = 0;
-
+    let bed = ['./texture/wallpaper1.jpeg', './texture/wallpaper2.jpeg', './texture/wallpaper3.jpeg', './texture/wallpaper4.jpeg', './texture/wallpaper5.jpeg'];
+    let currentbedIndex = 2;
     init();
 
     function init() {
@@ -47,9 +51,11 @@
 
             // Load the default exture
             const defaultTexture = new THREE.TextureLoader().load(wallpapers[currentWallpaperIndex]);
+            const bedTexture = new THREE.TextureLoader().load(bed[currentbedIndex]);
 
             // Create material with default texture
             const defaultMaterial = new THREE.MeshBasicMaterial({ map: defaultTexture });
+            const bedMaterial = new THREE.MeshBasicMaterial({ map: bedTexture });
 
             // Traverse through the model to find walls and assign default material
             model.traverse(function(child) {
@@ -57,9 +63,15 @@
                     child.material = defaultMaterial;
                 }
             });
+            model.traverse(function(child) {
+                if (child instanceof THREE.Mesh && child.name.includes('Wall_Similer_main_0')) {
+                    child.material = bedMaterial;
+                }
+            });
 
             await renderer.compileAsync(model, camera, scene);
             scene.add(model);
+            console.log(model,'model name');
             render();
         });
    
@@ -69,6 +81,36 @@
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1;
         container.appendChild(renderer.domElement);
+
+           // Create a sphere for the background
+    var sphereGeometry = new THREE.SphereGeometry(500, 60, 40);
+    var sphereMaterial = new THREE.MeshBasicMaterial({
+        side: THREE.BackSide // Make it visible from the inside
+    });
+    var backgroundSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+    scene.add(backgroundSphere);
+
+    // Array to hold the paths of HDR images
+    var hdriImages = ['./texture/cobblestone_street_night_2k.hdr', './texture/symmetrical_garden_02_2k.hdr'];
+    var currentHDRIIndex = 0; // Index of the currently displayed HDR image
+
+    // Click handler function
+    function toggleBackground() {
+    currentHDRIIndex = (currentHDRIIndex + 1) % hdriImages.length; // Cycle through the images
+    var newHDRI = hdriImages[currentHDRIIndex];
+    new RGBELoader()
+        .setDataType(THREE.FloatType) // Change the data type
+        .load(newHDRI, function (texture) {
+            backgroundSphere.material.map = texture; // Change the texture
+            backgroundSphere.material.needsUpdate = true; // Update the material
+        });
+}
+
+
+ // Add event listener to the button
+ var toggleBackgroundBtn = document.getElementById('toggleBackgroundBtn');
+    toggleBackgroundBtn.addEventListener('click', toggleBackground);
+
 
         // Add OrbitControls for mouse control
         controls = new OrbitControls(camera, renderer.domElement);
@@ -86,6 +128,13 @@
         circle3.position.set(-0.7, 0.4, 0.4);
         circle3.scale.set(0.5,0.5,0.5);
         scene.add(circle3);
+
+        const geometry5 = new THREE.CircleGeometry(0.1, 32);
+        const material5 = new THREE.MeshBasicMaterial({ color: 0xffffff , side : THREE.DoubleSide });
+        const circle5 = new THREE.Mesh(geometry5, material5);
+        circle5.position.set(0, 0.3, 0.8);
+        circle5.scale.set(0.5,0.5,0.5);
+        scene.add(circle5);
 
         const geometry1 = new THREE.BoxGeometry();
         const material1 = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
@@ -112,7 +161,7 @@
         targetObject4.position.set(0,0.2,1);
        
         scene.add(targetObject4);
-        targetObject4.visible = true;
+        targetObject4.visible = false;
 
         // Add click event listener to the renderer's DOM element
         renderer.domElement.addEventListener('click', onClick);
@@ -127,6 +176,7 @@
 
             const intersects = raycaster.intersectObject(circle);
             const intersects3 = raycaster.intersectObject(circle3);
+            const intersects4 = raycaster.intersectObject(circle5);
 
             if (intersects.length > 0) {
                 // Circle clicked
@@ -147,23 +197,37 @@
                 // alert('Circle clicked!');
            
             }
+
+            if (intersects4.length > 0) {
+                // Circle clicked
+                circle5.visible = false;
+                const targetPosition4 = targetObject4.position.clone();
+                const newPosition4 = targetPosition4.clone().add(new THREE.Vector3(0, 0.4, -0.1)); 
+                gsap.to(camera.position, { x: newPosition4.x, y: newPosition4.y, z: newPosition4.z, duration: 3 });
+                circle.visible = true;
+                circle3.visible = true;
+                // alert('Circle clicked!');
+           
+            }
         }
 
         window.addEventListener('resize', onWindowResize);
-        document.getElementById('zoomButton').addEventListener('click', zoomToTarget);
+        // document.getElementById('zoomButton').addEventListener('click', zoomToTarget);
         for (let i = 0; i < wallpapers.length; i++) {
             document.getElementById(`changeWallpaperButton${i}`).addEventListener('click', () => changeWallpaper(i));
         }
 
-
+        for (let i = 0; i < bed.length; i++) {
+            document.getElementById(`changebedButton${i}`).addEventListener('click', () => changebed(i));
+        }
     }
 
-    function zoomToTarget() {
+    // function zoomToTarget() {
       
-        const targetPosition4 = targetObject4.position.clone();
-                const newPosition4 = targetPosition4.clone().add(new THREE.Vector3(0, 0.4, -0.1)); 
-                gsap.to(camera.position, { x: newPosition4.x, y: newPosition4.y, z: newPosition4.z, duration: 3 });
-    }
+    //     const targetPosition4 = targetObject4.position.clone();
+    //             const newPosition4 = targetPosition4.clone().add(new THREE.Vector3(0, 0.4, -0.1)); 
+    //             gsap.to(camera.position, { x: newPosition4.x, y: newPosition4.y, z: newPosition4.z, duration: 3 });
+    // }
 
     function onWindowResize() {
         camera.aspect = window.innerWidth / window.innerHeight;
@@ -186,6 +250,20 @@
         });
     }
 
+    function changebed(index) {
+        currentbedIndex = index;
+        const newTextureLoader1 = new THREE.TextureLoader();
+        newTextureLoader1.load(bed[currentbedIndex], function(newTexture1) {
+            scene.traverse(function(child) {
+                if (child instanceof THREE.Mesh && child.name.includes('Wall_Similer_main_0')) {
+                    child.material.map = newTexture1;
+                    child.material.needsUpdate = true; // Update material
+                }
+            });
+            render();
+        });
+    }
+
     function render() {
         
         requestAnimationFrame(render);
@@ -201,9 +279,11 @@
     <button id="changeWallpaperButton2"><img src="wallpaper3.jpg"></button>
     <button id="changeWallpaperButton3"><img src="wallpaper4.jpg"></button>
     <button id="changeWallpaperButton4"><img src="wallpaper5.jpg"></button> -->
-    <button id="zoomButton">Camera Animation</button>
-<button id="changeWallpaperButton">Show Container</button>
+    <!-- <button id="zoomButton">Camera Animation</button> -->
+<button id="changeWallpaperButton">Show Texture</button>
+<button id="changebedButton">Show wall Texture</button>
 
+<button id="toggleBackgroundBtn">Toggle Background</button>
     <div class="container hidden">
         <div class="top-images">
             <button id="changeWallpaperButton0"><img src="./texture/bedsheet1.jpg"></button>
@@ -215,14 +295,26 @@
             <button id="changeWallpaperButton4"><img src="./texture/bedsheet5.jpg"></button>
         </div>
     </div>
-    <span class="close-icon" onclick="toggleSidebar()">Close</span>
+
+    <div class="container1 hidden1">
+        <div class="top-images1">
+            <button id="changebedButton0"><img src="./texture/wallpaper1.jpeg"></button>
+            <button id="changebedButton1"><img src="./texture/wallpaper2.jpeg"></button>
+            <button id="changebedButton2"><img src="./texture/wallpaper3.jpeg"></button>
+        </div>
+        <div class="bottom-images1">
+            <button id="changebedButton3"><img src="./texture/wallpaper4.jpeg"></button>
+            <button id="changebedButton4"><img src="./texture/wallpaper5.jpeg"></button>
+        </div>
+    </div>
+    <span class="close-icon" onclick="toggleSidebar()"><img src="./icon/close.png"  ></span>
 </div>
 
 <div class="footer">
-    <div class="icon" onclick="toggleSidebar()">Icon 1</div>
-    <div class="icon" onclick="toggleSidebar()">Icon 2</div>
-    <div class="icon" onclick="toggleSidebar()">Icon 3</div>
-    <div class="icon" onclick="toggleSidebar()">Icon 4</div>
+    <div class="icon" onclick="toggleSidebar()"><img src="./icon/change.jpeg" ></div>
+    <div class="icon" onclick="toggleSidebar()"><img src="./icon/change.jpeg" ></div>
+    <div class="icon" onclick="toggleSidebar()"><img src="./icon/change.jpeg" ></div>
+    <div class="icon" onclick="toggleSidebar()"><img src="./icon/change.jpeg" ></div>
 </div>
 
 <script>
@@ -232,6 +324,8 @@
             sidebar.style.left = '-200px'; // hide sidebar
             var container = document.querySelector(".container");
     container.classList.toggle("hidden");
+    var container = document.querySelector(".container1");
+    container.classList.toggle("hidden1");
         } else {
             sidebar.style.left = '0px'; // show sidebar
             
@@ -242,6 +336,12 @@
     document.getElementById("changeWallpaperButton").addEventListener("click", function() {
     var container = document.querySelector(".container");
     container.classList.toggle("hidden");
+    
+});
+
+document.getElementById("changebedButton").addEventListener("click", function() {
+    var container = document.querySelector(".container1");
+    container.classList.toggle("hidden1");
 });
 
 </script>
