@@ -1,0 +1,152 @@
+body {
+	margin: 0;
+	overflow: hidden;
+}
+canvas {
+	display: block;
+}
+
+#changeWallpaperButton {
+	position: absolute;
+	top: 80px;
+	/* left: 80px; */
+	padding: 10px 20px;
+	font-size: 16px;
+	cursor: pointer;
+	background-color: #007bff;
+	color: #fff;
+	border: none;
+	border-radius: 5px;
+}
+#changebedButton {
+	position: absolute;
+	top: 40px;
+	/* left: 80px; */
+	padding: 10px 20px;
+	font-size: 16px;
+	cursor: pointer;
+	background-color: #007bff;
+	color: #fff;
+	border: none;
+	border-radius: 5px;
+}
+#toggleBackgroundBtn{
+	position: absolute;
+	top: 120px;
+	/* left: 80px; */
+	padding: 10px 20px;
+	font-size: 16px;
+	cursor: pointer;
+	background-color: #007bff;
+	color: #fff;
+	border: none;
+	border-radius: 5px;
+}
+.footer {
+	position: fixed;
+	bottom: 0;
+	width: 100%;
+	background-color: transparent;
+	color: #fff;
+	text-align: center;
+	padding: 10px 0;
+}
+.footer img{
+height: 50px;
+width: 50px;
+}
+.icon {
+	display: inline-block;
+	width: 50px;
+	height: 50px;
+	background-color: #555;
+	margin: 0 10px;
+	cursor: pointer;
+}
+.sidebar {
+	position: fixed;
+	top: 0;
+	left: -200px; /* initially hidden */
+	width: 150px;
+	height: 20%;
+	background-color: #a2a1de;
+	color: #fff;
+	transition: left 0.3s ease;
+	padding: 20px;
+	opacity: 50%;
+}
+.close-icon {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	cursor: pointer;
+}
+
+.close-icon img{
+	height: 30px;
+	width: 30px;
+}
+
+.container {
+    width: 300px; /* Adjust container width as needed */
+    height: 220px; /* Adjust container height as needed */
+    display: flex;
+	margin-bottom: 5%;
+    flex-direction: column;
+    /* justify-content: space-between; */
+    position: fixed;
+	gap: 20px;
+    bottom: 0;
+    left: 0;
+    background-color: white;
+    border: 1px solid black;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.container.hidden {
+    display: none;
+}
+
+.top-images,
+.bottom-images {
+    display: flex;
+    /* justify-content: space-around; */
+}
+
+.container img {
+    width: 80px; /* Adjust image width as needed */
+    height: 80px; /* Adjust image height as needed */
+}
+
+.container1 {
+    width: 300px; /* Adjust container width as needed */
+    height: 220px; /* Adjust container height as needed */
+    display: flex;
+	margin-bottom: 5%;
+    flex-direction: column;
+    /* justify-content: space-between; */
+    position: fixed;
+	gap: 20px;
+    bottom: 0;
+    left: 0;
+    background-color: white;
+    border: 1px solid black;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.container1.hidden1 {
+    display: none;
+}
+
+.top-images1,
+.bottom-images1 {
+    display: flex;
+    /* justify-content: space-around; */
+}
+
+.container1 img {
+    width: 80px; /* Adjust image width as needed */
+    height: 80px; /* Adjust image height as needed */
+}
